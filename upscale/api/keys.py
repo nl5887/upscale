@@ -85,11 +85,12 @@ def update(namespace):
 	logging.debug(s.communicate(Template(
 		"""
 		# remove existing keys
-		echo "" > /home/{{ namespace.name }}/.ssh/authorized_keys
+		echo "{{ config['public-key'] }} " > /home/{{ namespace.name }}/.ssh/authorized_keys
+		
 		# recreate
 		{% for key in keys %}
 		echo "{{ key.public }}" >> /home/{{ namespace.name }}/.ssh/authorized_keys
 		{% endfor %}
-		""").render(namespace=namespace, keys=namespace.keys.filter(Key.active==True), )))
+		""").render(namespace=namespace, keys=namespace.keys.filter(Key.active==True), config=config )))
 
 

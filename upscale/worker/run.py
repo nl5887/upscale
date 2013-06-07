@@ -7,11 +7,14 @@ import yaml
 from datetime import datetime
 from jinja2 import Environment, PackageLoader, Template
 
+import upscale
+
 from upscale.db.model import (Session, Project, Namespace)
 from upscale.utils import lxc
 from upscale import config
 
 config=config.config
+
 
 def chroot(path, command):        
         import subprocess 
@@ -24,6 +27,9 @@ def cmd(command):
 	return (lxcls.communicate()[0])
 		
 def run (namespace, project):
+	datadir = os.path.join(os.path.dirname(os.path.realpath(upscale.__file__)), 'data')
+	print datadir
+
 	session = Session()
 	namespace = session.query(Namespace).filter(Namespace.name==namespace).first()
 	if (not namespace):
@@ -34,7 +40,7 @@ def run (namespace, project):
 		raise Exception("Unknown project")
 
 	from datetime import date
-	bi = yaml.load(file('runtime/{0}.yaml'.format(project.template), 'r'))	
+	bi = yaml.load(file(os.path.join(datadir, 'runtime/{0}.yaml').format(project.template), 'r'))	
 	
 	container="{0}_{1}_{2}".format(namespace.name, project.name, datetime.now().strftime("%y%m%d%H%M%S"))
 	rootfs="/var/lib/lxc/{0}/rootfs".format(container)
@@ -64,9 +70,6 @@ def run (namespace, project):
 
 	# mount http://stackoverflow.com/questions/6469557/mounting-fuse-gives-invalid-argument-error-in-python
 	print (lxc.clone(base, container))
-	
-	for hook in project.hooks:
-		pass
 	
 	datadir  = os.path.join (rootfs, "data")
 	if not os.path.exists(datadir):

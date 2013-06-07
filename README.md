@@ -64,8 +64,19 @@ Runtimes are located in the data/runtimes directory. These are yaml configuratio
 - Autoscale
 - Weighted hosts 
 
+### Prepare virtual env
+```
+cd /opt/upscale
+virtualenv env
+. env/activate/bin
+pip install -r requirements
+```
 
-## Deployment to new host
+### Run worker 
+. env/activate/bin
+python bin/worker.py
+
+### Deployment to new host
 ```
 python deploy.py --host 10.0.0.231 -u username -i identity
 ```
@@ -73,12 +84,29 @@ python deploy.py --host 10.0.0.231 -u username -i identity
 ## Commands:
 ### Create new namespace
 ```
-python ./bin/upscale.py namespace create --namespace test
+python bin/manage.py namespace create  --namespace test 
 ```
-### Create new application
+### Add your ssh key to repository
+python bin/manage.py keys add --namespace test --name test --public "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAIEAxBBy9uYqcxPIap9of7nbySHjJLurqTGART3k06NgSHpVvjotNMdMrz+NArijlTLunQD/5sxCxlIXHg2uXH2ECni0bfK/fC6TWWAmUuHcIdELfUTxark7CmalWG8BV39w6UYqGH0/nQfHgq4lRxSitrpWW90UCk2oJ0PvxNbrhnk="
+
+### Create new application within namespace
 ```
-python ./bin/upscale.py app create --namespace test --application test
+python bin/manage.py app create  --namespace test --application website --runtime apache-php5.3
 ```
+
+### Clone to local repository
+```
+git clone test@git.url:~/git/website.git . 
+git commit
+git push origin master
+```
+
+### Run instance on specified host 
+```
+python bin/manage.py hosts list
+python bin/manage.py app run --host i-c811af85 --application website --namespace test 
+```
+
 ### List hosts
 ```
 python ./bin/upscale.py hosts list

@@ -5,7 +5,6 @@ version: 1
 packages:
  - wget
  - python
- - python-dev
  - git
  - nginx
  - uwsgi
@@ -42,10 +41,10 @@ files:
    	<plugin>python</plugin>
   	<socket>/run/uwsgi/app/socket</socket>
   	<pythonpath>/var/www/env/bin/</pythonpath>
-  	<chdir>/var/www/dropit/dropit/</chdir>
-  	<home>/var/www/dropit/env/</home>
-  	<paste>config:/var/www/dropit/dropit/production.ini</paste>
-  	<env>PYTHON_EGG_CACHE=/var/www/dropit/.python-eggs</env>
+  	<chdir>/var/www/</chdir>
+  	<home>/var/www/env/</home>
+  	<paste>config:/var/www/production.ini</paste>
+  	<env>PYTHON_EGG_CACHE=/var/www/.python-eggs</env>
   </uwsgi>
  /var/www/health: |
 
@@ -53,9 +52,6 @@ install: |
 
 libraries:
  - python-tzdata
-
-virtualenv:
- - tz
 
 hooks:
  pre:

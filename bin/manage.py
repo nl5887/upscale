@@ -73,8 +73,13 @@ class Hosts(object):
 
 class Container(object):
 	@staticmethod
+	def shutdown(args):
+		containers.shutdown(args.host, args.container)	
+
+	@staticmethod
 	def status(args):
-		containers.status()
+		for k, v in containers.status().iteritems():
+			print '{0} ({1})'.format(k, ', '.join(v)) 
 
 def main():
 	parser = argparse.ArgumentParser()
@@ -120,6 +125,11 @@ def main():
 	subparsers_a = parser_a.add_subparsers(dest='action', help='sub-command help')
 	parser_aa = subparsers_a.add_parser('status', help='a help')
 	parser_aa.set_defaults(func=Container.status)
+
+	parser_aa = subparsers_a.add_parser('shutdown', help='a help')
+	parser_aa.add_argument('--container', required=True)
+	parser_aa.add_argument('--host', required=True)
+	parser_aa.set_defaults(func=Container.shutdown)
 
 	parser_a = subparsers.add_parser('hosts', help='a help')
 	subparsers_a = parser_a.add_subparsers(dest='action', help='sub-command help')

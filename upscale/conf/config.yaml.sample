@@ -9,6 +9,10 @@ domain: '{0}.{1}.upscale.yourorganization.org'
 data: '/data/'
 varnish: 'varnish:6081'
 
+# ssh public key for use with git 
+public-key: |
+ ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAIEAxBBy9uYqcxPIap9of7nbySHjJLurqTGART3k06NgSHpVvjotNMdMrz+NArijlTLunQD/5sxCxlIXHg2uXH2ECni0bfK/fC6TWWAmUuHcIdELfUTxark7CmalWG8BV39w6UYqGH0/nQfHgq4lRxSitrpWW90UCk2oJ0PvxNbrhnk=
+
 broker:
  url: 'amqp://guest@host'
 

@@ -7,11 +7,14 @@ import pprint
 from kombu.common import Broadcast
 from celery import Celery
 
-from upscale import celeryconfig
+import upscale
 
+from upscale import celeryconfig
 from upscale.config import config
 from upscale.db.model import Session, Namespace, Domain, Project, Template
 from upscale.utils import lxc
+
+datadir = os.path.join(os.path.dirname(os.path.realpath(upscale.__file__)), 'data')
 
 celery = Celery()
 celery.config_from_object(celeryconfig)
@@ -22,13 +25,14 @@ def get_instances():
 	import boto.ec2
 
 	access=config['ec2']['access-key']
-
 	key= config['ec2']['secret-key'] 
+	region= config['ec2']['region'] 
+	vpc_id= config['ec2']['vpc-id'] 
 
-	ec2_conn = boto.ec2.connect_to_region('eu-west-1', aws_access_key_id=key, aws_secret_access_key=access)
+	ec2_conn = boto.ec2.connect_to_region(region, aws_access_key_id=key, aws_secret_access_key=access)
 
 	instances = []
-	for reservation in ec2_conn.get_all_instances(filters={'vpc-id':'vpc-52eaf63a'}):
+	for reservation in ec2_conn.get_all_instances(filters={'vpc-id':vpc_id}):
 		for instance in reservation.instances:
 			instances.append(instance)
 	

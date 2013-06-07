@@ -5,9 +5,14 @@ import yaml
 import git
 import shutil
 import subprocess
+import logging
+
 from jinja2 import Template
 import tempfile
 import git
+
+import upscale
+datadir = os.path.join(os.path.dirname(os.path.realpath(upscale.__file__)), 'data')
 
 from upscale import config
 config = config.config
@@ -24,63 +29,66 @@ def cmd(command):
 	return (lxcls.communicate()[0])
 
 def create(namespace_arg, application_arg, runtime_arg):
-	if not os.path.exists('/data/upscale/runtime/{0}.yaml'.format(runtime_arg)):
-		print 'Runtime {0} does not exist.'.format(runtime_arg)
-		return
+	if not os.path.exists(os.path.join(datadir, 'runtime/{0}.yaml').format(runtime_arg)):
+		raise Exception ('Runtime {0} does not exist.'.format(runtime_arg))
 
+	try:
+		session = Session()
+		namespace = session.query(Namespace).filter(Namespace.name==namespace_arg).one()
 
-	session = Session()
-	namespace = session.query(Namespace).filter(Namespace.name==namespace_arg).one()
+		project = Project()
+		project.name = application_arg 
+		project.template = runtime_arg 
+		namespace.projects.append(project)
+		 
+		bi = yaml.load(file(os.path.join(datadir, 'runtime/{0}.yaml').format(project.template), 'r'))
 
-	project = Project()
-	project.name = application_arg 
-	project.template = runtime_arg 
-	namespace.projects.append(project)
-	session.commit()
-	 
-	bi = yaml.load(file('/data/upscale/runtime/{0}.yaml'.format(project.template), 'r'))
+		s = subprocess.Popen(['su', '-s', '/bin/sh', namespace.name], stdin=subprocess.PIPE, stdout=subprocess.PIPE, )
 
-	s = subprocess.Popen(['su', '-s', '/bin/sh', namespace.name], stdin=subprocess.PIPE, stdout=subprocess.PIPE, )
+		# initialize bare git repository
+		print s.communicate(Template(
+			"""
+			cd /home/{{ namespace.name }}/
+			mkdir "/home/{{ namespace.name }}/git/{{ application.name }}.git"
+			cd "/home/{{ namespace.name }}/git/{{ application.name }}.git"
+			git init --template="{{gittemplatedir}}" --bare "/home/{{ namespace.name }}/git/{{ application.name }}.git"
+			""").render(namespace=namespace, application=project, gittemplatedir=os.path.join(datadir, 'templates/git')))
 
-	# initialize bare git repository
-	print s.communicate(Template(
-		"""
-		cd /home/{{ namespace.name }}/
-		mkdir "/home/{{ namespace.name }}/git/{{ application.name }}.git"
-		cd "/home/{{ namespace.name }}/git/{{ application.name }}.git"
-		git init --template="/data/upscale/etc/git/" --bare "/home/{{ namespace.name }}/git/{{ application.name }}.git"
-		""").render(namespace=namespace, application=project, ))
+		# add registered (namespace) ssh keys!
+		# also for generic user
 
-	# add registered (namespace) ssh keys!
-	# also for generic user
+		# using ssh because of ownership 
+		dirpath = tempfile.mkdtemp()
 
-	# using ssh because of ownership 
-	dirpath = tempfile.mkdtemp()
+		cloned_repo = git.Repo.clone_from(config['git']['ssh'].format(namespace.name, project.name), dirpath)
+		
+		print 'Repo cloned from {0}.'.format(config['git']['ssh'].format(namespace.name, project.name))
+		index = cloned_repo.index
 
-	cloned_repo = git.Repo.clone_from(config['git']['ssh'].format(namespace.name, project.name), dirpath)
-	
-	print 'Repo cloned from {0}.'.format(config['git']['ssh'].format(namespace.name, project.name))
-	index = cloned_repo.index
+		if 'project' in bi:
+			for template in bi['project'].keys():
+				print 'Adding to repo ' + template
+				with open(os.path.join (dirpath, template), "w") as fh:
+					fh.write (
+							Template(bi['project'][template]).render( namespace=namespace, application=project)
+						 )
+				index.add([template])
 
+		new_commit = index.commit("Upscale initial commit.")
+		origin = cloned_repo.remotes.origin
+		origin.push(cloned_repo.head)
 
-	if 'project' in bi:
-		for template in bi['project'].keys():
-			print 'Adding to repo ' + template
-			with open(os.path.join (dirpath, template), "w") as fh:
-				fh.write (
-						Template(bi['project'][template]).render( namespace=namespace, application=project)
-					 )
-			index.add([template])
+		# clean up temp folder
+		shutil.rmtree(dirpath)
 
-	new_commit = index.commit("Upscale initial commit.")
-	origin = cloned_repo.remotes.origin
-	origin.push(cloned_repo.head)
+		session.commit()
 
-	# clean up temp folder
-        shutil.rmtree(dirpath)
+		print "Application has been created. You can clone the git repository with \n" \
+			"git clone {0} .".format(config['git']['public'].format(namespace.name, project.name))	
 
-	print "Application has been created. You can clone the git repository with \n" \
-		"git clone {0} .".format(config['git']['public'].format(namespace.name, project.name))	
+	except:
+		session.rollback()
+		logging.exception("Exception while creating application")
 
 def run(namespace, project, host):
 
