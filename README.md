@@ -65,23 +65,24 @@ python deploy.py --host 10.0.0.231 -u username -i identity
 ```
 
 ## Commands:
-- Create new namespace
+### Create new namespace
 ```
 python ./bin/upscale.py namespace create --namespace test
 ```
-- Create new application
+### Create new application
 ```
 python ./bin/upscale.py app create --namespace test --application test
 ```
-- List hosts
+### List hosts
 ```
 python ./bin/upscale.py hosts list
 ```
-- Add ssh keys to application
+### Add ssh keys to application
+
 ```
 python bin/manage.py keys add --namespace test --name test --public "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAIEAxBBy9uYqcxPIap9of7nbySHjJLurqTGART3k06NgSHpVvjotNMdMrz+NArijlTLunQD/5sxCxlIXHg2uXH2ECni0bfK/fC6TWWAmUuHcIdELfUTxark7CmalWG8BV39w6UYqGH0/nQfHgq4lRxSitrpWW90UCk2oJ0PvxNbrhnk= user@host"
 ```
-- Run the application
+### Run the application
 ```
 python ./bin/upscale.py app run --namespace test --application test
 ```
