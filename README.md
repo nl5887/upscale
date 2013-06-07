@@ -14,6 +14,9 @@ Upscale runs currently on Ubuntu 13.04 and Amazon EC2.
 - load is balanced through the hosts and containers
 - containers are started by the host
 
+## How does it work
+Each application is started within an LXC container, added to the loadbalancer and made available through the public dns.
+
 ## Contribute
 Yes! We've got a lot of work to do, so all contributions are highly appreciated.
 

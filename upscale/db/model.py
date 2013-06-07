@@ -45,8 +45,9 @@ class Domain(Base):
 
 	id = Column(Integer, primary_key=True)
 	name = Column(String)
+	active = Column(Boolean)
 	projectid = Column(Integer, ForeignKey('projects.id'))
-	project = relationship("Project", backref=backref('domains', order_by=id))
+	project = relationship("Project", uselist=False, backref=backref('domains', order_by=id, lazy='dynamic'))
 
 class Hook(Base):
 	__tablename__ = 'hooks'
