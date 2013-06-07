@@ -109,7 +109,7 @@ python bin/manage.py app run --host i-c811af85 --application website --namespace
 
 ### List hosts
 ```
-python ./bin/upscale.py hosts list
+python ./bin/manage.py hosts list
 ```
 ### Add ssh keys to application
 
@@ -118,5 +118,5 @@ python bin/manage.py keys add --namespace test --name test --public "ssh-rsa AAA
 ```
 ### Run the application
 ```
-python ./bin/upscale.py app run --namespace test --application test
+python ./bin/manage.py app run --namespace test --application test
 ```
