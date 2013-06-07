@@ -1,0 +1,26 @@
+db:
+ drivername: "mysql"
+ host: "host"
+ username: "upscale"
+ password: "password"
+ database: "upscale"
+
+domain: '{0}.{1}.upscale.yourorganization.org'
+data: '/data/'
+varnish: 'varnish:6081'
+
+broker:
+ url: 'amqp://guest@host'
+
+git:
+ public: '{0}@host:~/git/{1}.git'
+ ssh: '{0}@host:~/git/{1}.git'
+ url: 'git://host/~{0}/{1}.git'
+
+ec2:
+ vpc-id: ''
+ region: 'eu-west-1'
+ access-key: ''
+ secret-key: ''
+ ssl-hostname-verification: true
+

@@ -1,0 +1,33 @@
+#!/usr/bin/python
+import sys
+
+refname = sys.argv[1]
+oldrev = sys.argv[2]
+newrev = sys.argv[3]
+
+import git
+repo=git.Repo('.')              
+
+commit =repo.commit(newrev)
+
+print 'Received commit {0} from {1} ({2})'.format(commit.message, commit.author, newrev);
+
+import yaml
+try:
+	yaml.load(commit.tree['app.yaml'].data_stream.read())
+except yaml.scanner.ScannerError, exc:
+	print 'Check app.yaml'
+	print (exc)
+	sys.exit(1)
+except ImportError, exc:
+	print 'Check app.yaml'
+	print (exc)
+	sys.exit(1)
+
+#deploy branch and run updates
+
+#print commits.tree['app.yaml'].data_stream.read()
+
+sys.exit(0)
+
+# deploy!

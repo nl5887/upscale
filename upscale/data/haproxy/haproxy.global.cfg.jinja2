@@ -1,0 +1,61 @@
+# this config needs haproxy-1.1.28 or haproxy-1.2.1
+global
+	log 127.0.0.1	local0
+	log 127.0.0.1	local1 notice
+	#log loghost	local0 info
+	maxconn 4096
+	stats socket    /tmp/haproxy.global.sock
+	#chroot /usr/share/haproxy
+	user haproxy
+	group haproxy
+	daemon
+	#debug
+	#quiet
+
+defaults
+	log	global
+	mode	http
+	option	httplog
+	option	dontlognull
+	retries	3
+	option redispatch
+	maxconn	2000
+	contimeout	5000
+	clitimeout	50000
+	srvtimeout	50000
+	option httpclose
+	stats enable
+	stats hide-version
+	stats realm Haproxy\ Statistics
+	stats uri /stats?global
+	#stats auth xxxxx:xxxxx
+
+frontend proxy
+	bind 0.0.0.0:80
+
+	acl url_static  path_end         .gif .png .jpg .css .js
+	acl internal dst 127.0.0.1
+	use_backend varnish if !internal url_static
+
+{% for application in applications.values() %}
+{% for domain in application.domains  %}
+	acl is_{{domain.id}} hdr_dom(host) -i {{domain.name}} 
+	use_backend {{application.id}} if is_{{domain.id}}
+{% endfor %}
+{% endfor %}
+	monitor-uri /haproxy
+
+{% for application in applications.values() %}
+backend {{application.id}}
+	cookie LB1 insert indirect nocache 
+	balance roundrobin
+	option httpchk HEAD /health HTTP/1.1\r\nHost:\ {{(application.domains|first).name}}
+{% for host in application.hosts %}
+	server {{ host.id }} {{host.ipaddr}}:8080 cookie {{host.id}} check inter 2000 rise 2 fall 5 maxconn 10
+{% endfor %}
+{% endfor %}
+
+backend varnish 
+	balance roundrobin
+	server varnish {{ config['varnish'] }} 
+

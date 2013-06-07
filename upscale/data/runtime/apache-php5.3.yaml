@@ -1,0 +1,73 @@
+template: php5
+version: 3
+
+packages:
+ - python
+ - wget
+ - git
+ - php5-mysql 
+ - apache2 
+ - libapache2-mod-fastcgi 
+ - php5-fpm 
+ - php5-gd 
+ - php5-imap 
+ - php5-mcrypt 
+ - php5-xcache
+ - php5-mcrypt
+# - php5-pear
+ - php5-imap
+ - php5-pgsql
+# - php5-mbstring
+# - php5-xml
+
+files:
+ /etc/apache2/mods-available/php5-fpm.conf: |
+   <IfModule mod_fastcgi.c>
+   	AddHandler php5-fcgi .php
+   	Action php5-fcgi /php5-fcgi
+   	Alias /php5-fcgi /usr/lib/cgi-bin/php5-fcgi
+   	FastCgiExternalServer /usr/lib/cgi-bin/php5-fcgi -socket /var/run/php5-fpm.sock  -pass-header Authorization 
+   </IfModule>
+ /etc/apache2/mods-available/php5-fpm.load: |
+  LoadModule fastcgi_module /usr/lib/apache2/modules/mod_fastcgi.so
+ /etc/apache2/sites-available/default: |
+   <VirtualHost *:80>
+   	ServerAdmin webmaster@localhost
+   	SetEnv UPSCALE_MYSQL_DB_HOST "{{UPSCALE_MYSQL_DB_HOST}}"
+   	SetEnv UPSCALE_MYSQL_DB_PORT "{{UPSCALE_MYSQL_DB_PORT}}"
+   	SetEnv UPSCALE_MYSQL_DB_NAME "{{UPSCALE_MYSQL_DB_NAME}}"
+   	SetEnv UPSCALE_MYSQL_DB_USERNAME "{{UPSCALE_MYSQL_DB_USERNAME}}"
+   	SetEnv UPSCALE_MYSQL_DB_PASSWORD "{{UPSCALE_MYSQL_DB_PASSWORD}}"
+   	DocumentRoot /var/www/{{ root }}/
+   	<Directory />
+   		Options FollowSymLinks
+   		AllowOverride All
+   	</Directory>
+   	ErrorLog ${APACHE_LOG_DIR}/error.log
+   	LogLevel warn
+   	CustomLog ${APACHE_LOG_DIR}/access.log combined
+   </VirtualHost>
+ /var/www/health: |
+
+install: |
+ #ln -s /etc/apache2/mods-available/php5-fpm.conf /etc/apache2/mods-enabled/
+ chown -R www-data:www-data /var/www
+ for MOD in "actions" "fastcgi" "alias" "rewrite" "headers" "php5-fpm"; do a2enmod $MOD; done;
+ /etc/init.d/php5-fpm restart
+ /etc/init.d/apache2 restart
+
+# default project files
+project:
+ app.yaml: |
+  application: {{ application.name }} 
+  version: 1
+  root: "" 
+  install: |
+ info.php: |
+  <?php
+  phpinfo();
+  ?>
+  
+hooks:
+ pre:
+  - test

@@ -1,0 +1,16 @@
+packages:
+ - wget
+ - python
+ - python-dev
+ - git
+ - nginx
+ - uwsgi
+ - uwsgi-plugin-python
+ - python-uwsgidecorators
+
+virtualenv:
+ - tz
+
+hooks:
+ pre:
+  - test

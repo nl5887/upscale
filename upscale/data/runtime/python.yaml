@@ -1,0 +1,62 @@
+template: python
+
+version: 1 
+
+packages:
+ - wget
+ - python
+ - python-dev
+ - git
+ - nginx
+ - uwsgi
+ - uwsgi-plugin-python
+ - python-uwsgidecorators
+
+# some needs to run for template, some for app
+
+files:
+ /etc/nginx/sites-available/default: | 
+  server {
+  	listen 80;
+  	listen [::]:80 default_server ipv6only=on;
+  	root /var/www/static/;
+  	index index.html index.htm;
+  	client_max_body_size 2000M;
+  
+  	location / {
+   		root /var/www/static;
+   		try_files $uri @uwsgi;
+  	}
+  
+   	location @uwsgi {
+  		uwsgi_pass      	unix:///run/uwsgi/app/socket;
+  		include         	uwsgi_params;
+   		uwsgi_read_timeout 	1800;
+  		uwsgi_param     	UWSGI_SCHEME $scheme;
+  		uwsgi_param     	SERVER_SOFTWARE    nginx/$nginx_version;
+  		uwsgi_param 		SCRIPT_NAME '';
+  	}
+  }
+ /etc/uwsgi/apps-enabled/app.xml: |
+  <uwsgi>
+   	<plugin>python</plugin>
+  	<socket>/run/uwsgi/app/socket</socket>
+  	<pythonpath>/var/www/env/bin/</pythonpath>
+  	<chdir>/var/www/dropit/dropit/</chdir>
+  	<home>/var/www/dropit/env/</home>
+  	<paste>config:/var/www/dropit/dropit/production.ini</paste>
+  	<env>PYTHON_EGG_CACHE=/var/www/dropit/.python-eggs</env>
+  </uwsgi>
+ /var/www/health: |
+
+install: |
+
+libraries:
+ - python-tzdata
+
+virtualenv:
+ - tz
+
+hooks:
+ pre:
+  - test
