@@ -14,6 +14,9 @@ Upscale runs currently on Ubuntu 13.04 and Amazon EC2.
 - load is balanced through the hosts and containers
 - containers are started by the host
 
+## Contribute
+Yes! We've got a lot of work to do, so all contributions are highly appreciated.
+
 ## Runtimes:
 Runtimes are located in the data/runtimes directory. These are yaml configurations, and can be easily added.
 - PHP 5.3
