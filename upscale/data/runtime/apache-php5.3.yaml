@@ -67,7 +67,3 @@ project:
   <?php
   phpinfo();
   ?>
-  
-hooks:
- pre:
-  - test
