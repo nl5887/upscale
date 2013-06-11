@@ -3,6 +3,8 @@ Upscale
 =========== 
 Upscale is an open 'platform as a service' provider. It will deploy new hosts, start application containers and rebalance containers. Containers can be runned always on multiple different hosts, ensuring availability.
 
+Our goal is to create an application platform where you don't have to think about hosts, scaling and deployment. The application platform will scale up and down new containers and new hosts when necessary, without downtime or any notice.
+ 
 Upscale consist of namespaces, applications, runtime and containers. A company can have its own namespace, from within this namespace multiple applications can be created. A deployment of an application is done using containers. A container is an instance of a runtime, for running php, python or ruby. Multiple containers can be active.
 
 Upscale runs currently on Ubuntu 13.04 and Amazon EC2.
@@ -54,6 +56,14 @@ Runtimes are located in the data/runtimes directory. These are yaml configuratio
 - An upscale worker needs to be deployed on each host, this worker is responsible for returning status information, running new containers, shutting down containers etc.
 - The upscale git server creates a git repository for each application. New applications will be deployed running the HEAD of repository.
 - An upscale manage console. This is being used for creating new namespaces, applications.
+
+## Data
+For each namespace a corresponding folder in the data folder is being created. The namespace folder will have a home folder, which will be used for authentication to the git repository, and the git repositories itself. Each application will create a data folder below the namespace folder. The application data folder is shared between all containers.
+
+```
+namespace/home/git/(application).git
+namespace/application/
+```
 
 ## Todo
 - Support for other distributions
