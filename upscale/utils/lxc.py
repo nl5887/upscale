@@ -3,6 +3,7 @@
 import sys, getopt, os
 import shlex, subprocess
 
+#import gevent_subprocess as subprocess
 
 def start(name):	
 	import subprocess
@@ -20,9 +21,9 @@ def clone(base, name):
 	lxcls = subprocess.Popen(['lxc-clone', '-n', name, '-o', base],stdout = subprocess.PIPE,)
 	return (lxcls.communicate()[0])
 
-def wait(name):	
+def wait(name, state='RUNNING'):	
 	import subprocess
-	lxcls = subprocess.Popen(['lxc-wait', '-n', name, '-s', 'RUNNING'],stdout = subprocess.PIPE,)
+	lxcls = subprocess.Popen(['lxc-wait', '-n', name, '-s', state],stdout = subprocess.PIPE,)
 	return (lxcls.communicate()[0])
 
 def destroy(name):	
@@ -51,5 +52,5 @@ def get_containers(type='running'):
 		lxcls = subprocess.Popen(['lxc-ls',],stdout = subprocess.PIPE,)
 	else:
 		lxcls = subprocess.Popen(['lxc-ls','--running'],stdout = subprocess.PIPE,)
-	return (lxcls.communicate()[0].split('\n'))
+	return (filter(None, lxcls.communicate()[0].split('\n')))
 		
