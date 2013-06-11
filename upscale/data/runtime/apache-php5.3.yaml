@@ -1,5 +1,5 @@
 template: php5
-version: 3
+version: 20130611
 
 packages:
  - python

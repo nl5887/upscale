@@ -12,12 +12,10 @@ class Tasks(RemoteClient):
 class Worker(RemoteClient):
 	pass
 
-def rebalance():
-	print 'Balancing hosts'
+def get_containers():
+	hosts = {} 
+	containers = {}
 
-	hosts = {}
-
-	containers={}
 	for host in get_hosts():
 		p = []
 		try:
@@ -32,6 +30,13 @@ def rebalance():
 			#containers[host.id] = h.get_containers().get(timeout=5)
 		except Exception, e:
 			print e
+
+	return (hosts, containers)
+	
+def rebalance():
+	print 'Balancing hosts'
+
+	(hosts, containers) = get_containers()
 
 	# use weighted rebalance
 	# these are servers which shouldnt be target
@@ -56,7 +61,7 @@ def rebalance():
 		print 'Nothing to balance, already balanced.'
 		return
 	
-	# find container that is not on new host
+	# find container to move that is not on new host, could cause a deadlock
 	old_container = None
 	min_host_applications = set([(b.split('_')[0], b.split('_')[1]) for b in containers[min_host] if len(b.split('_'))==3])
 

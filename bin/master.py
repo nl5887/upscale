@@ -39,13 +39,32 @@ def reload_all():
 			h.reload()
 
 # start host
-def start(host, namespace, website):
+def start(namespace, application):
+	from upscale.master.balancer import get_containers
+
+	(hosts, containers) = get_containers()
+
+        # also weighted hosts, so one in static host, one on spot instance
+        min_host = None
+        for host in containers:
+                if (not min_host or len(containers[host])<len(containers[min_host])):
+			# check if it already contains project
+			min_host_applications = set([(b.split('_')[0], b.split('_')[1]) for b in containers[host] if len(b.split('_'))==3])
+			if ((namespace, application) in min_host_applications):
+				continue
+
+                        min_host=host
+
+	if not min_host:
+		raise Exception('No host available')
+
+	print 'Starting on host {0}.'.format(min_host)
 	# start container on min host
 	# check minhost
-	with Worker("tcp://{0}:10000/".format(host)) as h:
+	with Worker("tcp://{0}:10000/".format(hosts[min_host])) as h:
 		#h.start(namespace, application).get(timeout=5)
 		print ('Starting new container')
-		h.start(namespace, website)
+		h.start(namespace, application)
 
 	enqueue(reload_all)
 
