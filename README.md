@@ -1,13 +1,13 @@
 ===========
 Upscale
 =========== 
-Upscale is an open platform as a service provider. It will deploy new hosts, start new containers and rebalance containers. Containers can be runned always on multiple different, ensuring availability.
+Upscale is an open 'platform as a service' provider. It will deploy new hosts, start application containers and rebalance containers. Containers can be runned always on multiple different hosts, ensuring availability.
 
 Upscale consist of namespaces, applications, runtime and containers. A company can have its own namespace, from within this namespace multiple applications can be created. A deployment of an application is done using containers. A container is an instance of a runtime, for running php, python or ruby. Multiple containers can be active.
 
 Upscale runs currently on Ubuntu 13.04 and Amazon EC2.
 
-## What do we have already:
+## What do we have already
 - we can create namespaces with applications
 - repositories are created 
 - app.yaml is being verified by each push
@@ -20,11 +20,11 @@ Each application is started within an LXC container, added to the loadbalancer a
 ## Contribute
 Yes! We've got a lot of work to do, so all contributions are highly appreciated.
 
-## Runtimes:
+## Runtimes
 Runtimes are located in the data/runtimes directory. These are yaml configurations, and can be easily added.
 - PHP 5.3
 
-## Technologies:
+## Technologies
 - Amazon EC2 (currently we're using the ec2 cloud for running hosts)
 - Ubuntu 13.04 (this is our current platform of choice)
 - Python 2.7 (as programming language)
@@ -35,6 +35,7 @@ Runtimes are located in the data/runtimes directory. These are yaml configuratio
 - Celery (Python) (as service bus)
 - Jinja2 (Python) (as templating language)
 - Sphinx (for documentation)
+- RabbitMQ (as service bus)
 
 ## How to start?
 - create an amazon vpc - 
@@ -48,7 +49,8 @@ Runtimes are located in the data/runtimes directory. These are yaml configuratio
 - clone the repository, add files, update app.yaml, commit and push
 - run the application (application.namespace.upscale.yourdomain.org)
 
-## Components:
+## Components
+- The upscale master is located at one of the servers, receives requests and routes them to the workers.
 - An upscale worker needs to be deployed on each host, this worker is responsible for returning status information, running new containers, shutting down containers etc.
 - The upscale git server creates a git repository for each application. New applications will be deployed running the HEAD of repository.
 - An upscale manage console. This is being used for creating new namespaces, applications.
@@ -63,6 +65,8 @@ Runtimes are located in the data/runtimes directory. These are yaml configuratio
 - Authorization and authentication
 - Autoscale
 - Weighted hosts 
+- Adoption of Juju / Salt
+- User management with NCSD?
 
 ### Prepare virtual env
 ```
@@ -87,7 +91,9 @@ python deploy.py --host 10.0.0.231 -u username -i identity
 python bin/manage.py namespace create  --namespace test 
 ```
 ### Add your ssh key to repository
+```
 python bin/manage.py keys add --namespace test --name test --public "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAIEAxBBy9uYqcxPIap9of7nbySHjJLurqTGART3k06NgSHpVvjotNMdMrz+NArijlTLunQD/5sxCxlIXHg2uXH2ECni0bfK/fC6TWWAmUuHcIdELfUTxark7CmalWG8BV39w6UYqGH0/nQfHgq4lRxSitrpWW90UCk2oJ0PvxNbrhnk="
+```
 
 ### Create new application within namespace
 ```
@@ -106,15 +112,9 @@ git push origin master
 python bin/manage.py hosts list
 python bin/manage.py app run --host i-c811af85 --application website --namespace test 
 ```
-
 ### List hosts
 ```
 python ./bin/manage.py hosts list
-```
-### Add ssh keys to application
-
-```
-python bin/manage.py keys add --namespace test --name test --public "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAIEAxBBy9uYqcxPIap9of7nbySHjJLurqTGART3k06NgSHpVvjotNMdMrz+NArijlTLunQD/5sxCxlIXHg2uXH2ECni0bfK/fC6TWWAmUuHcIdELfUTxark7CmalWG8BV39w6UYqGH0/nQfHgq4lRxSitrpWW90UCk2oJ0PvxNbrhnk= user@host"
 ```
 ### Run the application
 ```

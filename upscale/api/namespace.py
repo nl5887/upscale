@@ -23,7 +23,11 @@ def create(namespace_arg):
 
 		import subprocess
 		# use skeleton dir?
-		s = subprocess.Popen(['useradd', '--base-dir', '/home', '-m', '-d', '/home/' + namespace.name, '--shell', '/usr/bin/git-shell', namespace.name, ], stdin=subprocess.PIPE, stdout=subprocess.PIPE, )
+		os.mkdir(os.path.join(config['data'], namespace.name))
+
+		home = os.path.join(config['data'], namespace.name, 'home')
+
+		s = subprocess.Popen(['useradd', '-m', '-d', home, '--shell', '/usr/bin/git-shell', namespace.name, ], stdin=subprocess.PIPE, stdout=subprocess.PIPE, )
 		logging.debug(s.communicate())
 		
 		import subprocess
@@ -32,14 +36,11 @@ def create(namespace_arg):
 		from jinja2 import Template
 		logging.debug(s.communicate(Template(
 			"""
-			mkdir /home/{{ namespace.name }}/git
-			mkdir /home/{{ namespace.name }}/.ssh
-			touch /home/{{ namespace.name }}/.ssh/authorized_keys
-			""").render(namespace=namespace, )))
+			mkdir {{home}}/git
+			mkdir {{home}}/.ssh
+			touch {{home}}/.ssh/authorized_keys
+			""").render(home = home )))
 		
-		if (not os.path.exists(os.path.join(config['data'], namespace.name))):
-			os.mkdir(os.path.join(config['data'], namespace.name))
-
 		session.commit()
 
 		print "Namespace has been created."	

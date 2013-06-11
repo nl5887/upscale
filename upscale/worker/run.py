@@ -7,6 +7,10 @@ import yaml
 from datetime import datetime
 from jinja2 import Environment, PackageLoader, Template
 
+from fabric.api import run, execute, task, settings, sudo, cd, prefix, env
+from fabric.operations import put
+from fabric.contrib import files
+
 import upscale
 
 from upscale.db.model import (Session, Project, Namespace)
@@ -69,17 +73,28 @@ def run (namespace, project):
 			#stop (base)		
 
 	# mount http://stackoverflow.com/questions/6469557/mounting-fuse-gives-invalid-argument-error-in-python
+
+	# clone of runtime for speed
 	print (lxc.clone(base, container))
 	
 	datadir  = os.path.join (rootfs, "data")
 	if not os.path.exists(datadir):
 		os.mkdir(datadir)
 
-	cmd("mount --bind /data/{0}/{1}/data {2}/data".format(namespace.name, project.name, rootfs))
+	cmd("mount --bind /data/{0}/{1} {2}/data".format(namespace.name, project.name, rootfs))
 
 	print lxc.start(container)
+	
+	# should we use cloud init for configuration instead of lxc-attach?
+	# The -u option accepts a cloud-init user-data file to configure the container on start. If -L is passed, then no locales will be installed.
 	print lxc.wait(container)
 
+	#env.user = args.username
+	#env.key_filename = args.i 
+	#env.password=
+	#execute(deploy, hosts=args.host.split(','))
+
+	# or should we use fabric for this?
 	print lxc.attach(container, "rm -df /var/www/*")
 
 	#if os.path.isdir(DIR_NAME):

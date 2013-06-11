@@ -43,16 +43,25 @@ def create(namespace_arg, application_arg, runtime_arg):
 		 
 		bi = yaml.load(file(os.path.join(datadir, 'runtime/{0}.yaml').format(project.template), 'r'))
 
+		root = os.path.join(config['data'], namespace.name, )
+
+		if not os.path.exists(os.path.join(root, project.name)):
+			os.mkdir(os.path.join(root, project.name))
+
+		home = os.path.join(config['data'], namespace.name, 'home')
+
 		s = subprocess.Popen(['su', '-s', '/bin/sh', namespace.name], stdin=subprocess.PIPE, stdout=subprocess.PIPE, )
+
 
 		# initialize bare git repository
 		print s.communicate(Template(
 			"""
-			cd /home/{{ namespace.name }}/
-			mkdir "/home/{{ namespace.name }}/git/{{ application.name }}.git"
-			cd "/home/{{ namespace.name }}/git/{{ application.name }}.git"
-			git init --template="{{gittemplatedir}}" --bare "/home/{{ namespace.name }}/git/{{ application.name }}.git"
-			""").render(namespace=namespace, application=project, gittemplatedir=os.path.join(datadir, 'templates/git')))
+			cd {{home}}
+			# create git repository
+			mkdir "{{home}}/git/{{ application.name }}.git"
+			cd "{{home}}/git/{{ application.name }}.git"
+			git init --template="{{gittemplatedir}}" --bare "{{home}}/git/{{ application.name }}.git"
+			""").render(namespace=namespace, application=project, gittemplatedir=os.path.join(datadir, 'templates/git'), home=home, root=root))
 
 		# add registered (namespace) ssh keys!
 		# also for generic user

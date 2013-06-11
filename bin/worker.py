@@ -2,21 +2,25 @@ import os
 import socket
 import datetime 
 import pprint
+import sys
 
-from kombu.common import Broadcast
-from celery import Celery
+POSSIBLE_TOPDIR = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
+                                   os.pardir,
+                                   os.pardir))
 
-from upscale import celeryconfig
+if os.path.exists(os.path.join(POSSIBLE_TOPDIR, 'upscale', '__init__.py')):
+    sys.path.insert(0, POSSIBLE_TOPDIR)
 
-from upscale.config import config
-from upscale.db.model import Session, Namespace, Domain, Project, Template
-from upscale.utils import lxc
+from upscale.utils.rpc import Server
 
-from celery import Celery
+import time
+import sys
+import traceback
 
-celery = Celery()
-celery.config_from_object(celeryconfig)
+from upscale.worker.worker import Worker
 
 if __name__ == '__main__':
-    celery.worker_main()
+	from upscale.worker import tasks
+	with Server("tcp://0.0.0.0:10000", {'Tasks': tasks, 'Worker': Worker()}) as s:
+		s.run()
 

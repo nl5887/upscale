@@ -21,7 +21,7 @@ class Worker(RemoteClient):
 def enqueue(func, *args, **kwargs):
 	q.put((func, args, kwargs))
 
-@periodic_task(interval=60)
+@periodic_task(interval=300)
 def balance():
 	def wrapper():
 		balancer.rebalance()

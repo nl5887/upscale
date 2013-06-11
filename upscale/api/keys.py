@@ -81,16 +81,19 @@ def update(namespace):
         import subprocess
 
 	from jinja2 import Template
+
+	home = os.path.join(config['data'], namespace.name, 'home')
+
 	s = subprocess.Popen(['su', '-s', '/bin/sh', namespace.name], stdin=subprocess.PIPE, stdout=subprocess.PIPE, )
 	logging.debug(s.communicate(Template(
 		"""
 		# remove existing keys
-		echo "{{ config['public-key'] }} " > /home/{{ namespace.name }}/.ssh/authorized_keys
+		echo "{{ config['public-key'] }} " > {{home}}/.ssh/authorized_keys
 		
 		# recreate
 		{% for key in keys %}
-		echo "{{ key.public }}" >> /home/{{ namespace.name }}/.ssh/authorized_keys
+		echo "{{ key.public }}" >> {{home}}/.ssh/authorized_keys
 		{% endfor %}
-		""").render(namespace=namespace, keys=namespace.keys.filter(Key.active==True), config=config )))
+		""").render(namespace=namespace, keys=namespace.keys.filter(Key.active==True), config=config, home=home )))
 
 

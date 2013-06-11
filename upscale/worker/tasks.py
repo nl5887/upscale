@@ -13,15 +13,38 @@ from upscale import celeryconfig
 from upscale.config import config
 from upscale.db.model import Session, Namespace, Domain, Project, Template
 from upscale.utils import lxc
+from upscale.utils.common import get_hosts
 
 datadir = os.path.join(os.path.dirname(os.path.realpath(upscale.__file__)), 'data')
 
-celery = Celery()
-celery.config_from_object(celeryconfig)
-
 hosts=[]
 
-def get_instances():
+class Worker(object):
+	""" Various convenience methods to make things cooler. """
+
+	def start(self, namespace, project):
+		import gevent
+		g=gevent.spawn(run.run(namespace, project))
+		container=g.get()
+		return (container)
+
+	def wait(self, name, state='RUNNING'):
+		print lxc.wait(name, state)	
+		return (True)
+
+	def destroy(self, name):
+		print lxc.destroy(name)	
+		return (True)
+
+	def shutdown(self, name):
+		print lxc.shutdown(name)	
+		return (True)
+
+	def get_containers(self):
+		return (lxc.get_containers())
+	
+"""
+def get_hosts():
 	import boto.ec2
 
 	access=config['ec2']['access-key']
@@ -37,14 +60,14 @@ def get_instances():
 			instances.append(instance)
 	
 	return (instances)
-
+"""
 def get_applications():
 	session = Session()
 
 	hosts = []
 	
-	for instance in get_instances():
-		hosts.append({'id': instance.id + '_' + instance.instance_type, 'ipaddr': instance.private_ip_address})
+	for host in get_hosts():
+		hosts.append({'id': host.id + '_' + host.instance_type, 'ipaddr': host.private_ip_address})
 
 	
 	applications={}
@@ -156,22 +179,18 @@ def rebalance():
 	return 'bla'
 	
 #@celery.task(name='tasks.get_containers', routing_key=m['instance-id'])
-@celery.task(name='tasks.start', )
 def start(namespace, project):
 	container = run.run(namespace, project)
 	return (container)
 
-@celery.task(name='tasks.destroy', )
 def destroy(name):
 	print lxc.destroy(name)	
 	return (True)
 
-@celery.task(name='tasks.shutdown', )
 def shutdown(name):
 	print lxc.shutdown(name)	
 	return (True)
-
-@celery.task(name='tasks.get_containers', )
+"""
 def get_containers():
 	return (lxc.get_containers())
 	
@@ -179,18 +198,12 @@ def get_containers():
 def balance():
 	pass
 
-@celery.task(name='tasks.reload', ignore_result=True)
+"""
 def reload():
 	# reload applications
 	applications = get_applications()
 
-	import subprocess
-	lxcls = subprocess.Popen(['lxc-ls', '--running',],stdout = subprocess.PIPE,)
-	
-	for container in lxcls.communicate()[0].split('\n'):
-		if not container:
-			continue
-
+	for container in lxc.get_containers():
 		try:
 			ipaddr = socket.gethostbyname(container)
 			(proj, appl, id) = container.split('_')
@@ -199,19 +212,16 @@ def reload():
 		except Exception as exc:
 			print (exc)
 
-		#import pprint
-		#pprint.pprint(applications)
-
 		import jinja2
 		templateLoader = jinja2.FileSystemLoader( searchpath="/" )
 		templateEnv = jinja2.Environment( loader=templateLoader )
 		from jinja2 import Template
-		template = templateEnv.get_template('templates/etc/haproxy/haproxy.cfg.jinja2')
+		template = templateEnv.get_template(os.path.join(datadir, 'haproxy/haproxy.cfg.jinja2'))
 		with open("/etc/haproxy/haproxy.cfg", "wb") as fh:
 			fh.write (template.render(applications=applications, config=config))
 		#print (template.render(applications=applications))
 
-		template = templateEnv.get_template('templates/etc/haproxy/haproxy.global.cfg.jinja2')
+		template = templateEnv.get_template(os.path.join(datadir, 'haproxy/haproxy.global.cfg.jinja2'))
 		with open("/etc/haproxy/haproxy.global.cfg", "wb") as fh:
 			fh.write (template.render(applications=applications, config=config))
 
@@ -234,4 +244,3 @@ def reload():
 			args = shlex.split('/bin/bash -c "haproxy -f /etc/haproxy/haproxy.global.cfg -p /var/run/haproxy.global.pid -D"')
 		finally:
 			p = subprocess.Popen(args)
-

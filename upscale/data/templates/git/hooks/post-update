@@ -3,4 +3,13 @@ import sys
 
 print 'Everything ok, deploying update.'
 
+def upgrade():
+	pass
+	
+import zmq
+context = zmq.Context()
+socket = context.socket(zmq.PUSH)
+socket.connect('tcp://127.0.0.1:5867')
+socket.send_pyobj((upgrade, ['namespace', 'application'], {}))
+
 # tasks.update()
