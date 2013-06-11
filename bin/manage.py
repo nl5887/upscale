@@ -70,7 +70,7 @@ class Application(object):
 
 	@staticmethod
 	def run(args):
-		application.run(args.namespace, args.application, args.host)
+		application.run(args.namespace, args.application, )
 
 class Hosts(object):
 	@staticmethod
@@ -125,7 +125,6 @@ def main():
 	parser_aa = subparsers_a.add_parser('run', help='a help')
 	parser_aa.add_argument('--namespace', required=True)
 	parser_aa.add_argument('--application', required=True)
-	parser_aa.add_argument('--host', required=True)
 	parser_aa.set_defaults(func=Application.run)
 
 	parser_a = subparsers.add_parser('containers', help='a help')

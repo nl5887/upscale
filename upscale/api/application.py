@@ -17,7 +17,7 @@ datadir = os.path.join(os.path.dirname(os.path.realpath(upscale.__file__)), 'dat
 from upscale import config
 config = config.config
 
-from upscale.worker import tasks
+#from upscale.worker import tasks
 import datetime
 
 from upscale.db.model import (Session, Namespace, Project)
@@ -99,27 +99,18 @@ def create(namespace_arg, application_arg, runtime_arg):
 		session.rollback()
 		logging.exception("Exception while creating application")
 
-def run(namespace, project, host):
+def start():
+	pass
 
-	# start container
-        containers={}
-        for i in tasks.get_instances():
-                a=tasks.get_containers.apply_async(queue=i.id, routing_key=i.id, expires=datetime.datetime.now()+datetime.timedelta(seconds=5), )
-                containers[i.id] = a.get()
+def run(namespace, project, ):
+	import zmq
+	context = zmq.Context()
+	socket = context.socket(zmq.PUSH)
+	socket.connect('tcp://127.0.0.1:5867')
+	socket.send_pyobj((start, [namespace, project], {}))
+	#socket.send_pyobj((start, ['remco1013', 'website3'], {}))
 
-	min_host = host 
-	if not host:
-		for host in containers:
-			if (not min_host or len(containers[host])<len(containers[min_host])):
-				min_host=host
-				pass
-
-	print 'Starting container on host {0}.'.format(min_host)
-
-	# prevent running same container on min_host
-	container = tasks.start.apply_async(kwargs={'namespace':namespace, 'project':project}, queue=min_host, routing_key=min_host, expires=datetime.datetime.now()+datetime.timedelta(seconds=5), ).get()
-
-	print 'Started container {1} on host {0}.'.format(min_host, container)
+	print 'Starting application.'
 	# start chained rebalance afterwards
 
 
