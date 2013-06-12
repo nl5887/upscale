@@ -29,8 +29,11 @@ if os.path.exists(os.path.join(POSSIBLE_TOPDIR, 'upscale', '__init__.py')):
     sys.path.insert(0, POSSIBLE_TOPDIR)
 
 from upscale import config
-
 from upscale.api import application, containers, namespace, hosts, keys, domain
+from upscale.utils.rpc import RemoteClient
+
+class Master(RemoteClient):
+	pass
 
 class Namespace(object):
 	@staticmethod
@@ -66,11 +69,13 @@ class Application(object):
 	@staticmethod
 	def create(args):
 		application.create(args.namespace, args.application, args.runtime)
-		print 'Key has been added'
+		print 'Application created.'
 
 	@staticmethod
 	def run(args):
-		application.run(args.namespace, args.application, )
+		with Master('tcp://127.0.0.1:5867') as s:
+			s.start(args.namespace, args.application, )
+		print "Application will be started."
 
 class Hosts(object):
 	@staticmethod

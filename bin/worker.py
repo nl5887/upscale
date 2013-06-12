@@ -4,6 +4,8 @@ import datetime
 import pprint
 import sys
 
+
+
 POSSIBLE_TOPDIR = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
                                    os.pardir,
                                    os.pardir))
@@ -19,7 +21,11 @@ import traceback
 
 from upscale.worker.worker import Worker
 
+from upscale import log as logging
+LOG = logging.getLogger('upscale.worker')
+
 if __name__ == '__main__':
+	LOG.info('Started.')
 	from upscale.worker import tasks
 	with Server("tcp://0.0.0.0:10000", {'Tasks': tasks, 'Worker': Worker()}) as s:
 		s.run()

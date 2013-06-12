@@ -4,6 +4,9 @@ db:
  username: "upscale"
  password: "password"
  database: "upscale"
+ query:
+  use_unicode: True
+  charset: utf8
 
 domain: '{0}.{1}.upscale.yourorganization.org'
 data: '/data/'

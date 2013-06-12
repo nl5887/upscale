@@ -5,7 +5,7 @@ import sqlalchemy as SA
 dburl = SA.engine.url.URL(**config['db'])
 
 from sqlalchemy import create_engine
-engine = create_engine(dburl, echo=False)
+engine = create_engine(dburl, echo=False, pool_recycle=3600)
 
 from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
@@ -75,6 +75,8 @@ class Parameter(Base):
 	project = relationship("Project", backref=backref('parameters', order_by=id))
 
 from sqlalchemy.orm import sessionmaker
-Session = sessionmaker(bind=engine)
+from sqlalchemy.orm import scoped_session
+Session = scoped_session(sessionmaker(bind=engine))
+#Session = sessionmaker(bind=engine)
 #session = Session()
 

@@ -29,9 +29,17 @@ class Server(object):
 				(cls, cmd, args, kwargs) = self.socket.recv_pyobj()
 				print cls, cmd, args, kwargs
 
+				if (cmd.startswith('_')):
+					# private function
+					raise Exception('Private functions not allowed.')
+
 				c = self.objects[cls]
 
-				f = getattr(c, cmd)
+				try:
+					f = getattr(c, cmd)
+				except AttributeError:
+					raise Exception('Unknown function')
+
 				print f
 
 				ret = f(*args, **kwargs)	
