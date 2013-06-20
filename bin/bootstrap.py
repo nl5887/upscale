@@ -70,7 +70,10 @@ def main():
 	else:
 		# local
 		execute(deploy, hosts=['127.0.0.1'])
-		
+	
+	print "Installation finished. Now you should configure upscale/conf/config.yaml and "
+	print "start master and worker nodes."
+	
 if __name__ == "__main__":
 	main()
 
