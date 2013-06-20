@@ -105,8 +105,12 @@ def run (namespace, project):
 			sudo('git checkout -b master')
 			sudo('git reset origin/master --hard')
 	
-		# execute build scripts	
+		# execute template build scripts	
 		with (cd('/tmp/upscale-runtime')):
+			sudo('chmod +x ./build && ./build')
+
+		# execute application build scripts
+		with (cd('/repo/.upscale/')):
 			sudo('chmod +x ./build && ./build')
 		
 	# check for app.yaml
