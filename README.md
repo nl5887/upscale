@@ -1,13 +1,40 @@
-===========
-Upscale
-=========== 
+# Upscale
+
 Upscale is an open 'platform as a service' provider. It will deploy new hosts, start application containers and rebalance containers. Containers can be runned always on multiple different hosts, ensuring availability.
 
 Our goal is to create an application platform where you don't have to think about hosts, scaling and deployment. The application platform will scale up and down new containers and new hosts when necessary, without downtime or any notice.
  
 Upscale consist of namespaces, applications, runtime and containers. A company can have its own namespace, from within this namespace multiple applications can be created. A deployment of an application is done using containers. A container is an instance of a runtime, for running php, python or ruby. Multiple containers can be active.
 
-Upscale runs currently on Ubuntu 13.04 and Amazon EC2.
+## Requirements
+ * Ubuntu 13.04
+ * Amazon EC2 (for starting new hosts, and retrieving host information)
+ * (External) git repository (e.g. github)
+
+## Installing
+### Prepare virtual env
+```
+cd /opt/upscale
+virtualenv env
+. env/activate/bin
+pip install -r requirements
+```
+
+### Run worker 
+. env/activate/bin
+python bin/worker.py
+
+### Deployment to new host
+```
+python deploy.py --host 10.0.0.231 -u username -i identity
+```
+
+## Configuring
+
+
+## Support
+
+You can use [Github Issues](https://github.com/nl5887/upscale/issues), or join us on Freenode in #upcale.
 
 ## What do we have already
 - we can create namespaces with applications
@@ -20,7 +47,7 @@ Upscale runs currently on Ubuntu 13.04 and Amazon EC2.
 Each application is started within an LXC container, added to the loadbalancer and made available through the public dns.
 
 ## Contribute
-Yes! We've got a lot of work to do, so all contributions are highly appreciated.
+Yes! We've got a lot of work to do, so all contributions are highly appreciated. You fork, we'll do the pulling.
 
 ## Runtimes
 Runtimes are located in the data/runtimes directory. These are yaml configurations, and can be easily added.
@@ -61,7 +88,6 @@ Runtimes are located in the data/runtimes directory. These are yaml configuratio
 For each namespace a corresponding folder in the data folder is being created. The namespace folder will have a home folder, which will be used for authentication to the git repository, and the git repositories itself. Each application will create a data folder below the namespace folder. The application data folder is shared between all containers.
 
 ```
-namespace/home/git/(application).git
 namespace/application/
 ```
 
@@ -74,58 +100,46 @@ namespace/application/
 - Remote management (current is just local)
 - Authorization and authentication
 - Autoscale
-- Weighted hosts 
+- Weighted hosts
+- create bootstrap (wget -qO- https://raw.github.com/nl5887/upscale/master/bootstrap.py | python)
 - Adoption of Juju / Salt
 - User management with NCSD?
 
-### Prepare virtual env
-```
-cd /opt/upscale
-virtualenv env
-. env/activate/bin
-pip install -r requirements
-```
-
-### Run worker 
-. env/activate/bin
-python bin/worker.py
-
-### Deployment to new host
-```
-python deploy.py --host 10.0.0.231 -u username -i identity
-```
 
 ## Commands:
 ### Create new namespace
 ```
 python bin/manage.py namespace create  --namespace test 
 ```
-### Add your ssh key to repository
+
+### Create new application within namespace (PHP)
 ```
-python bin/manage.py keys add --namespace test --name test --public "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAIEAxBBy9uYqcxPIap9of7nbySHjJLurqTGART3k06NgSHpVvjotNMdMrz+NArijlTLunQD/5sxCxlIXHg2uXH2ECni0bfK/fC6TWWAmUuHcIdELfUTxark7CmalWG8BV39w6UYqGH0/nQfHgq4lRxSitrpWW90UCk2oJ0PvxNbrhnk="
+python bin/manage.py app create  --namespace test --application website --runtime php-5.3 --repository "git://github.com/nl5887/upscale-runtime-php.git"  
 ```
 
-### Create new application within namespace
+### Create new application within namespace (Python)
 ```
-python bin/manage.py app create  --namespace test --application website --runtime apache-php5.3
-```
-
-### Clone to local repository
-```
-git clone test@git.url:~/git/website.git . 
-git commit
-git push origin master
+python bin/manage.py app create  --namespace test --application website --runtime python --repository "git://github.com/nl5887/upscale-runtime-python.git"  
 ```
 
-### Run instance on specified host 
+### Get public key for application (for deployment)
+```
+python bin/manage.py keys get --namespace test --application website 
+```
+
+### Configure deployment hooks (TODO)
+
+### Run application container on specified host 
 ```
 python bin/manage.py hosts list
-python bin/manage.py app run --host i-c811af85 --application website --namespace test 
+python bin/manage.py app run --host i-c811af85 --namespace test --application website  
 ```
+
 ### List hosts
 ```
 python ./bin/manage.py hosts list
 ```
+
 ### Run the application
 ```
 python ./bin/manage.py app run --namespace test --application test
