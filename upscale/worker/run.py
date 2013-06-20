@@ -95,6 +95,7 @@ def run (namespace, project):
 		with (cd('/tmp/')):
 			sudo('git clone git://github.com/nl5887/upscale-runtime-{0}.git upscale-runtime'.format(project.template))
 
+		"""
 		# fetch repository
 		sudo('mkdir -p /repo/')
 
@@ -104,14 +105,20 @@ def run (namespace, project):
 			sudo('git fetch origin')
 			sudo('git checkout -b master')
 			sudo('git reset origin/master --hard')
-	
-		# execute template build scripts	
-		with (cd('/tmp/upscale-runtime')):
-			sudo('chmod +x ./build && ./build')
+		"""
 
-		# execute application build scripts
-		with (cd('/repo/.upscale/')):
-			sudo('chmod +x ./build && ./build')
+		# execute template build scripts	
+		kwargs = {}
+		kwargs['UPSCALE_REPOSITORY_URL']=project.repository.url
+
+		with (shell_env(kwargs)):
+			with (cd('/tmp/upscale-runtime')):
+				sudo('chmod +x ./build && ./build')
+
+			if (os.path.exists('/repo/.upscale')):
+				# execute application build scripts
+				with (cd('/repo/.upscale/')):
+					sudo('chmod +x ./build && ./build')
 		
 	# check for app.yaml
 	ci={}
