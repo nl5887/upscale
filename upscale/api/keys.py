@@ -19,7 +19,13 @@ config = config.config
 
 from upscale.db.model import (Session, Namespace, Project, Key)
 
-
+def get(namespace_arg, application_arg):
+	session = Session()
+	namespace = session.query(Namespace).filter(Namespace.name==namespace_arg).one()
+	application = namespace.projects.filter(Project.name == application_arg).one()
+	key = application.key
+	return (key.public_key)
+ 	
 def add(namespace_arg, name_arg, public_arg):
 	session = Session()
 	namespace = session.query(Namespace).filter(Namespace.name==namespace_arg).one()

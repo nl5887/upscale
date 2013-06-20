@@ -42,6 +42,11 @@ class Namespace(object):
 
 class Keys(object):
 	@staticmethod
+	def get(args):
+		public_key = keys.get(args.namespace, args.application) 
+		print public_key
+
+	@staticmethod
 	def add(args):
 		keys.add(args.namespace, args.name, args.public)
 
@@ -68,7 +73,7 @@ class Domain(object):
 class Application(object):
 	@staticmethod
 	def create(args):
-		application.create(args.namespace, args.application, args.runtime)
+		application.create(args.namespace, args.application, args.runtime, args.repository)
 		print 'Application created.'
 
 	@staticmethod
@@ -124,6 +129,7 @@ def main():
 	parser_aa = subparsers_a.add_parser('create', help='a help')
 	parser_aa.add_argument('--namespace', required=True)
 	parser_aa.add_argument('--application', required=True)
+	parser_aa.add_argument('--repository', required=True)
 	parser_aa.add_argument('--runtime', required=True)
 	parser_aa.set_defaults(func=Application.create)
 
@@ -154,6 +160,10 @@ def main():
 	parser_aa.add_argument('--name', required=True)
 	parser_aa.add_argument('--public', required=True)
 	parser_aa.set_defaults(func=Keys.add)
+	parser_aa = subparsers_a.add_parser('get', help='a help')
+	parser_aa.add_argument('--namespace', required=True)
+	parser_aa.add_argument('--application', required=True)
+	parser_aa.set_defaults(func=Keys.get)
 	parser_aa = subparsers_a.add_parser('delete', help='a help')
 	parser_aa.add_argument('--namespace', required=True)
 	parser_aa.add_argument('--name', required=True)

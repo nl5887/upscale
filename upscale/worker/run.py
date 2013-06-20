@@ -55,27 +55,7 @@ def run (namespace, project):
 
 	print ("Using runtime {0}".format(base))
 
-	if (not base in lxc.get_containers('all')):
-			baserootfs="/var/lib/lxc/{0}/rootfs".format(base)
-			
-			# create template container
-			print (lxc.create(base))
-			
-			#bi = yaml.load(file('{0}.yaml'.format(project.template), 'r'))
-			# always update
-			print (chroot (baserootfs, r"apt-get update"))
-
-			# chroot or lxc-attach? 
-			# install packages
-			if bi['packages']:
-				print (chroot (baserootfs, r"apt-get install --force-yes -y " + ' '.join(bi['packages'])))
-
-			#stop (base)		
-
-	# mount http://stackoverflow.com/questions/6469557/mounting-fuse-gives-invalid-argument-error-in-python
-
-	# clone of runtime for speed
-	print (lxc.clone(base, container))
+	print (lxc.create(container,))
 	
 	datadir  = os.path.join (rootfs, "data")
 	if not os.path.exists(datadir):
@@ -84,74 +64,64 @@ def run (namespace, project):
 	cmd("mount --bind /data/{0}/{1} {2}/data".format(namespace.name, project.name, rootfs))
 
 	print lxc.start(container)
-	
-	# should we use cloud init for configuration instead of lxc-attach?
-	# The -u option accepts a cloud-init user-data file to configure the container on start. If -L is passed, then no locales will be installed.
 	print lxc.wait(container)
 
-	#env.user = args.username
-	#env.key_filename = args.i 
-	#env.password=
-	#execute(deploy, hosts=args.host.split(','))
+	print 'waiting 15 seconds'	
+	import time
+	time.sleep(15)
 
-	# or should we use fabric for this?
-	print lxc.attach(container, "rm -df /var/www/*")
+	import StringIO
+	from fabric.api import run, execute, task, settings, sudo, cd, prefix, env
+	with settings(user='ubuntu', password='ubuntu', host_string=container):
+		sudo('apt-get update -qq')
+	
+		# install basic packages	
+		sudo('apt-get install --force-yes -y -qq git', shell=False)
 
-	#if os.path.isdir(DIR_NAME):
-	#	shutil.rmtree(DIR_NAME)
+		# configure ssh
+		sudo('mkdir -p /root/.ssh')
 
-	#os.mkdir(DIR_NAME)
+		with (cd('/root/.ssh')):
+			# disable stricthostkeychecking
+			put(StringIO.StringIO('Host *\n    StrictHostKeyChecking no'), 'config', use_sudo=True, mode=0600)
+			put(StringIO.StringIO(project.key.public_key), 'id_rsa.pub', use_sudo=True, mode=0600)
+			put(StringIO.StringIO(project.key.private_key), 'id_rsa', use_sudo=True, mode=0600)
 
-	# should we do this inside container?
-	from git import Repo
-	Repo.clone_from(config['git']['url'].format(namespace.name, project.name), os.path.join(rootfs, 'var/www/'))
+		sudo('chmod 700 /root/.ssh')
+		sudo('chmod 600 /root/.ssh/*')
+		sudo('chown -R root:root /root/.ssh')
 
+		# get template
+		with (cd('/tmp/')):
+			sudo('git clone git://github.com/nl5887/upscale-runtime-{0}.git upscale-runtime'.format(project.template))
+
+		# fetch repository
+		sudo('mkdir -p /repo/')
+
+		with (cd('/repo/')):
+			sudo('git init')
+			sudo('git remote add origin {0}'.format(project.repository.url))
+			sudo('git fetch origin')
+			sudo('git checkout -b master')
+			sudo('git reset origin/master --hard')
+	
+		# execute template build scripts	
+		with (cd('/tmp/upscale-runtime')):
+			sudo('chmod +x ./build && ./build')
+
+		# execute application build scripts
+		with (cd('/repo/.upscale/')):
+			sudo('chmod +x ./build && ./build')
+		
 	# check for app.yaml
 	ci={}
 
-	if (os.path.exists(os.path.join(rootfs, 'var/www/app.yaml'))):
-		# load configuration
-		ci = yaml.load(file(os.path.join(rootfs, 'var/www/app.yaml'), 'r'))
-		pass		
-	
-	# should we do this inside container?
-	import shutil
-
-	files={}
-
-	if (bi.get('files')):
-		files.update(bi['files'])
-
-	if (ci.get('files')):
-		files.update(ci['files'])
-
-	for template in files.keys():
-		print 'Creating file ' + template[1:]
-		with open(os.path.join (rootfs, template[1:]), "w") as fh:
-			params = {}
-			for p in project.parameters:
-				params[p.key]=p.value
-
-			for p in bi.keys():
-				params[p]=bi[p]
-
-			for p in ci.keys():
-				params[p]=ci[p]
-
-			fh.write (
-					Template(files[template]).render(params)
-				 )
-
-
-	if (bi.get('install')):
-		print lxc.attach(container, bi['install'] )
-
-	if (ci.get('install')):
-		print lxc.attach(container, ci['install'] )
+	#if (os.path.exists(os.path.join(rootfs, 'var/www/app.yaml'))):
+	#	# load configuration
+	#	ci = yaml.load(file(os.path.join(rootfs, 'var/www/app.yaml'), 'r'))
+	#	pass		
 
 	return (container)
-	#from tasks import reload
-	#reload.delay()
 
 def main(argv):
 	try:
