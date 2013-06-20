@@ -30,15 +30,33 @@ class Project(Base):
 	namespaceid = Column(Integer, ForeignKey('namespaces.id'))
 	namespace = relationship("Namespace", uselist=False, backref=backref('projects', order_by=id, lazy='dynamic'))
 
+class Repository(Base):
+	__tablename__ = 'repositories'
+
+	id = Column(Integer, primary_key=True)
+	#name = Column(String)
+	#public = Column(String)
+	#active = Column(Boolean)
+	#private_key = Column(String)
+	#public_key = Column(String)
+	url = Column(String)
+	projectid = Column('projectid', Integer, ForeignKey('projects.id'))
+	project = relationship("Project", uselist=False, backref=backref('repository', order_by=id, uselist=False))
+
 class Key(Base):
 	__tablename__ = 'keys'
 
 	id = Column(Integer, primary_key=True)
 	name = Column(String)
-	public = Column(String)
+	#public = Column(String)
 	active = Column(Boolean)
-	namespaceid = Column(Integer, ForeignKey('namespaces.id'))
-	namespace = relationship("Namespace", uselist=False, backref=backref('keys', order_by=id, lazy='dynamic'))
+	private_key = Column(String)
+	public_key = Column(String)
+	projectid = Column('projectid', Integer, ForeignKey('projects.id'))
+	project = relationship("Project", uselist=False, backref=backref('key', order_by=id, uselist=False))
+
+	#namespaceid = Column(Integer, ForeignKey('namespaces.id'))
+	#namespace = relationship("Namespace", uselist=False, backref=backref('key', order_by=id, uselist=False))
 
 class Domain(Base):
 	__tablename__ = 'domains'

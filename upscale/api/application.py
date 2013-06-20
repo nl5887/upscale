@@ -20,7 +20,7 @@ config = config.config
 #from upscale.worker import tasks
 import datetime
 
-from upscale.db.model import (Session, Namespace, Project)
+from upscale.db.model import (Session, Namespace, Project, Key, Repository)
 
 # http://stackoverflow.com/questions/12641514/switch-to-different-user-using-fabric
 
@@ -28,7 +28,7 @@ def cmd(command):
 	lxcls = subprocess.Popen(shlex.split(command),stdout = subprocess.PIPE,)
 	return (lxcls.communicate()[0])
 
-def create(namespace_arg, application_arg, runtime_arg):
+def create(namespace_arg, application_arg, runtime_arg, repository_arg):
 	if not os.path.exists(os.path.join(datadir, 'runtime/{0}.yaml').format(runtime_arg)):
 		raise Exception ('Runtime {0} does not exist.'.format(runtime_arg))
 
@@ -48,25 +48,26 @@ def create(namespace_arg, application_arg, runtime_arg):
 		if not os.path.exists(os.path.join(root, project.name)):
 			os.mkdir(os.path.join(root, project.name))
 
-		home = os.path.join(config['data'], namespace.name, 'home')
+		# home = os.path.join(config['data'], namespace.name, 'home')
 
-		s = subprocess.Popen(['su', '-s', '/bin/sh', namespace.name], stdin=subprocess.PIPE, stdout=subprocess.PIPE, )
+		from Crypto.PublicKey import RSA
+		import base64
+		key = RSA.generate(2048, os.urandom)
 
+		project.key = Key()
+		#project.key.private_key = key.exportKey('OpenSSH')
+		project.key.private_key = key.exportKey()
+		project.key.public_key = key.exportKey('OpenSSH')
+		project.key.active = True
 
-		# initialize bare git repository
-		print s.communicate(Template(
-			"""
-			cd {{home}}
-			# create git repository
-			mkdir "{{home}}/git/{{ application.name }}.git"
-			cd "{{home}}/git/{{ application.name }}.git"
-			git init --template="{{gittemplatedir}}" --bare "{{home}}/git/{{ application.name }}.git"
-			""").render(namespace=namespace, application=project, gittemplatedir=os.path.join(datadir, 'templates/git'), home=home, root=root))
-
+		project.repository = Repository()
+		project.repository.url = repository_arg 
+ 
 		# add registered (namespace) ssh keys!
 		# also for generic user
 
 		# using ssh because of ownership 
+		"""
 		dirpath = tempfile.mkdtemp()
 
 		cloned_repo = git.Repo.clone_from(config['git']['ssh'].format(namespace.name, project.name), dirpath)
@@ -89,6 +90,7 @@ def create(namespace_arg, application_arg, runtime_arg):
 
 		# clean up temp folder
 		shutil.rmtree(dirpath)
+		"""
 
 		session.commit()
 

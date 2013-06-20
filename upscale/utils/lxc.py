@@ -7,6 +7,7 @@ import shlex, subprocess
 
 def start(name):	
 	import subprocess
+	#lxcls = subprocess.Popen(['lxc-start', '-d', '-n', name],stdout = subprocess.PIPE,)
 	lxcls = subprocess.Popen(['lxc-start', '-d', '-n', name],stdout = subprocess.PIPE,)
 	return (lxcls.communicate()[0])
 
@@ -41,9 +42,9 @@ def stop(name):
 	lxcls = subprocess.Popen(['lxc-stop', '-n', name],stdout = subprocess.PIPE,)
 	return (lxcls.communicate()[0])
 
-def create(name):	
+def create(name, ):	
 	import subprocess
-	lxcls = subprocess.Popen(['lxc-create', '-t', 'ubuntu', '-n', name],stdout = subprocess.PIPE,)
+	lxcls = subprocess.Popen(['lxc-create', '-t', 'ubuntu', '-n', name, ],stdout = subprocess.PIPE,)
 	return (lxcls.communicate()[0])
 
 def get_containers(type='running'):	

@@ -20,7 +20,8 @@ if os.path.exists(os.path.join(POSSIBLE_TOPDIR, 'upscale', '__init__.py')):
 
 from upscale.master import balancer
 from upscale.utils.rpc import RemoteClient
-from upscale.utils.decorators import periodic_task, every, adecorator, Dec
+#from upscale.utils.decorators import periodic_task, every, adecorator, Dec
+#from upscale.utils.decorators import periodic_task, every, adecorator, Dec
 
 from upscale import log as logging
 LOG = logging.getLogger('upscale.master')
@@ -42,7 +43,7 @@ class Master(object):
 	def __init__(self):
 		self.scheduler = Scheduler()
 		self.scheduler.configure({'daemonic': True})
-		self.scheduler.add_interval_job(self._balance, seconds=5)
+		self.scheduler.add_interval_job(self._balance, seconds=60)
 		self.scheduler.start()
 		pass
 
