@@ -11,23 +11,26 @@ Upscale consist of namespaces, applications, runtime and containers. A company c
  * Amazon EC2 (for starting new hosts, and retrieving host information)
  * (External) git repository (e.g. github)
 
-## Installing
-### Prepare virtual env
+## Installing (on first host) master
 ```
-cd /opt/upscale
-virtualenv env
-. env/activate/bin
-pip install -r requirements
+wget -qO- https://raw.github.com/nl5887/upscale/master/bin/bootstrap.py | python
 ```
 
-### Run worker 
+### Installing (next hosts) from master
+```
+python bootstrap.py --host {host1,host2} -u {username} -i {identity}
+```
+
+### Run master (in screen)
+screen
 . env/activate/bin
 python bin/worker.py
 
-### Deployment to new host
-```
-python deploy.py --host 10.0.0.231 -u username -i identity
-```
+### Run worker (screen)
+screen
+. env/activate/bin
+python bin/worker.py
+
 
 ## Configuring
 
@@ -101,7 +104,6 @@ namespace/application/
 - Authorization and authentication
 - Autoscale
 - Weighted hosts
-- create bootstrap (wget -qO- https://raw.github.com/nl5887/upscale/master/bootstrap.py | python)
 - Adoption of Juju / Salt
 - User management with NCSD?
 
