@@ -33,9 +33,9 @@ defaults
 frontend proxy
 	bind 0.0.0.0:80
 
-	acl url_static  path_end         .gif .png .jpg .css .js
-	acl internal dst 127.0.0.1
-	use_backend varnish if !internal url_static
+	#acl url_static  path_end         .gif .png .jpg .css .js
+	#acl internal dst 127.0.0.1
+	#use_backend varnish if !internal url_static
 
 {% for application in applications.values() %}
 {% for domain in application.domains  %}

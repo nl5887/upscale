@@ -10,6 +10,7 @@ from jinja2 import Environment, PackageLoader, Template
 from fabric.api import run, execute, task, settings, sudo, cd, prefix, env
 from fabric.operations import put
 from fabric.contrib import files
+from fabric.context_managers import shell_env
 
 import upscale
 
@@ -66,9 +67,16 @@ def run (namespace, project):
 	print lxc.start(container)
 	print lxc.wait(container)
 
-	print 'waiting 15 seconds'	
 	import time
-	time.sleep(15)
+	hostname = None
+
+	while (not hostname):
+		try:
+			import socket
+			(hostname, aliaslist, ipaddrlist) = socket.gethostbyname_ex (container)
+		except socket.gaierror, exc:
+			print 'Container not reachable yet... Waiting 1 second...'
+			time.sleep(1)
 
 	import StringIO
 	from fabric.api import run, execute, task, settings, sudo, cd, prefix, env
@@ -111,7 +119,7 @@ def run (namespace, project):
 		kwargs = {}
 		kwargs['UPSCALE_REPOSITORY_URL']=project.repository.url
 
-		with (shell_env(kwargs)):
+		with (shell_env(**kwargs)):
 			with (cd('/tmp/upscale-runtime')):
 				sudo('chmod +x ./build && ./build')
 
