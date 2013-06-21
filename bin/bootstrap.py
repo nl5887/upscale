@@ -8,8 +8,10 @@ import argparse
 def deploy():
 	with settings():
 		sudo('apt-get update -qq')
-		sudo('apt-get install --force-yes -y -qq lxc haproxy python-jinja2 git xfsprogs btrfs-tools python-virtualenv varnish')
-		
+
+		# mysql or mariadb?
+		sudo('apt-get install --force-yes -y -qq lxc haproxy python-jinja2 git xfsprogs btrfs-tools python-virtualenv mysql-server varnish')
+	
 		# install glusterfs
 		sudo('apt-get install --force-yes -y -qq software-properties-common')
 		sudo('add-apt-repository -y ppa:semiosis/ubuntu-glusterfs-3.3')
@@ -24,6 +26,10 @@ def deploy():
 		sudo('mkdir /data')
 		sudo('mount /data')
 
+		sudo('mkdir /opt/upscale')
+		with cd('/opt/upscale'):
+			sudo('git clone git://github.com/nl5887/upscale.git .')
+
 		#change lxc instances folder
 		sudo('mkdir /mnt/lxc')
 		sudo('mv /var/lib/lxc /var/lib/lxc.bak')
@@ -31,16 +37,20 @@ def deploy():
 
 		#files.upload_template("", "/etc/resolv.conf", use_sudo=True)
 		try:
-			with cd('/root/'):
+			with cd('/opt/upscale/'):
 				sudo('virtualenv --system-site-packages env')
 		except:
 			pass
 
-		with cd('/root/'):
+		with cd('/opt/upscale/'):
 			sudo('apt-get install --force-yes -y -qq libmysqlclient-dev python-dev')
-			with prefix('. /root/env/bin/activate'):
+			with prefix('. ./env/bin/activate'):
 				sudo('pip install jinja2 sqlalchemy mysql-python celery python-dateutil pytz gitpython')	
 
+
+		# install database
+		# sudo('curl http:///.sql | mysql -p upscale')
+	
 		with settings(warn_only=True):
 			sudo ('killall haproxy')
 
